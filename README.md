@@ -1,6 +1,25 @@
 # Welcome to your Lovable project
 
 ## Project info
+# FlyCab Booking App
+
+This is a mini web app for booking flying taxis in Bengaluru.
+Users can select pickup and drop points, see approximate fare,
+and track basic booking details.
+
+## Features (MVP)
+- Booking form (pickup, drop, name, mobile)
+- Store booking details in Firebase
+- Retrieve and display at least one booking
+- Built using LLM-generated PRD and schema
+
+
+
+## Division of Work
+| Student | Role |
+|--------|------|
+| Lakshmishree B N | Front-end UI (form, display screen) |
+| Lavanya Bingi | Backend, Firebase DB, Git workflow (fork, branch, PR, conflict) |
 
 **URL**: https://lovable.dev/projects/1031d041-4315-4e0e-9fee-978ad81c3d7d
 
