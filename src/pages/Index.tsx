@@ -93,13 +93,15 @@ const Index = () => {
       </main>
 
       {/* Booking Confirmation Dialog */}
-      {selectedTier && distance && (
+      {selectedTier && distance && pickup && dropoff && (
         <BookingConfirmation
           isOpen={showConfirmation}
           onClose={handleCloseConfirmation}
           tierName={selectedTier.name}
           price={selectedTier.price}
           distance={distance}
+          pickup={pickup}
+          dropoff={dropoff}
         />
       )}
     </div>
