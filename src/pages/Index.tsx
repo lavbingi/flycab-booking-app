@@ -1,8 +1,14 @@
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, Plane } from "lucide-react";
 import FlightMap from "@/components/FlightMap";
 import TaxiTiers from "@/components/TaxiTiers";
 import BookingConfirmation from "@/components/BookingConfirmation";
-import { Plane } from "lucide-react";
+import RecentBookings from "@/components/RecentBookings";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Location {
   lat: number;
@@ -16,6 +22,9 @@ const Index = () => {
   const [distance, setDistance] = useState<number | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [selectedTier, setSelectedTier] = useState<{ name: string; price: number } | null>(null);
+  const [guestName, setGuestName] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   const handleLocationSelect = (newPickup: Location | null, newDropoff: Location | null) => {
     setPickup(newPickup);
@@ -42,7 +51,48 @@ const Index = () => {
 
   const handleTierSelect = (tier: any, price: number) => {
     setSelectedTier({ name: tier.name, price });
-    setShowConfirmation(true);
+  };
+
+  const handleBooking = async () => {
+    if (!guestName.trim()) {
+      toast({
+        title: "Guest Name Required",
+        description: "Please enter your name to continue",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (pickup && dropoff && selectedTier && distance) {
+      setIsSubmitting(true);
+      
+      try {
+        const { error } = await supabase.from("bookings").insert({
+          guest_name: guestName,
+          start_location: pickup?.name || `${pickup?.lat.toFixed(4)}, ${pickup?.lng.toFixed(4)}`,
+          destination: dropoff?.name || `${dropoff?.lat.toFixed(4)}, ${dropoff?.lng.toFixed(4)}`,
+          taxi_tier: selectedTier.name,
+          total_price: selectedTier.price,
+        });
+
+        if (error) throw error;
+
+        setShowConfirmation(true);
+        toast({
+          title: "Booking Successful!",
+          description: "Your autonomous pod is on its way.",
+        });
+      } catch (error) {
+        toast({
+          title: "Booking Failed",
+          description: "There was an error saving your booking. Please try again.",
+          variant: "destructive",
+        });
+        console.error("Booking error:", error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
   };
 
   const handleCloseConfirmation = () => {
@@ -52,6 +102,7 @@ const Index = () => {
     setDropoff(null);
     setDistance(null);
     setSelectedTier(null);
+    setGuestName("");
   };
 
   return (
@@ -80,14 +131,47 @@ const Index = () => {
           </div>
 
           {/* Booking Section */}
-          <div className="flex flex-col">
-            <div className="bg-card rounded-xl p-6 shadow-xl border border-border">
-              <h2 className="text-2xl font-bold mb-2">Choose Your Flight</h2>
-              <p className="text-sm text-muted-foreground mb-6">
-                Select your pickup and destination to view available autonomous pods
-              </p>
-              <TaxiTiers distance={distance} onSelectTier={handleTierSelect} />
+          <div className="flex flex-col gap-6">
+            <div className="bg-card rounded-xl p-6 shadow-xl border border-border space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold mb-2">Choose Your Flight</h2>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Select your pickup and destination to view available autonomous pods
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="guest-name">Guest Name *</Label>
+                <Input 
+                  id="guest-name"
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={guestName}
+                  onChange={(e) => setGuestName(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              
+              <TaxiTiers distance={distance} onSelectTier={handleTierSelect} selectedTier={selectedTier} />
+              
+              <Button 
+                onClick={handleBooking}
+                disabled={!pickup || !dropoff || !selectedTier || !guestName.trim() || isSubmitting}
+                className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 disabled:opacity-50"
+                size="lg"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Booking...
+                  </>
+                ) : (
+                  "Book Your Flying Pod"
+                )}
+              </Button>
             </div>
+            
+            <RecentBookings />
           </div>
         </div>
       </main>

@@ -1,5 +1,4 @@
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Plane, Zap, Crown } from "lucide-react";
 
 interface TaxiTier {
@@ -45,9 +44,10 @@ const tiers: TaxiTier[] = [
 interface TaxiTiersProps {
   distance: number | null;
   onSelectTier: (tier: TaxiTier, price: number) => void;
+  selectedTier?: { name: string; price: number } | null;
 }
 
-const TaxiTiers = ({ distance, onSelectTier }: TaxiTiersProps) => {
+const TaxiTiers = ({ distance, onSelectTier, selectedTier }: TaxiTiersProps) => {
   if (!distance) {
     return (
       <div className="text-center py-12">
@@ -67,10 +67,14 @@ const TaxiTiers = ({ distance, onSelectTier }: TaxiTiersProps) => {
       </div>
       {tiers.map((tier) => {
         const price = calculatePrice(tier);
+        const isSelected = selectedTier?.name === tier.name;
         return (
           <Card
             key={tier.id}
-            className="p-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary cursor-pointer group"
+            onClick={() => onSelectTier(tier, price)}
+            className={`p-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group ${
+              isSelected ? "border-2 border-primary bg-primary/5" : "border-2 border-transparent"
+            }`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -87,13 +91,9 @@ const TaxiTiers = ({ distance, onSelectTier }: TaxiTiersProps) => {
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-primary">₹{price.toFixed(0)}</p>
-                <Button
-                  onClick={() => onSelectTier(tier, price)}
-                  className="mt-2 bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
-                  size="sm"
-                >
-                  Book Now
-                </Button>
+                {isSelected && (
+                  <p className="text-xs text-primary font-semibold mt-2">Selected</p>
+                )}
               </div>
             </div>
           </Card>
